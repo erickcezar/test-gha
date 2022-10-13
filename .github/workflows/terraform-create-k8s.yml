@@ -22,6 +22,7 @@ on:
         description: 'VPC Network Range'
         type: string
         required: true
+        default: "x.x.x.x/x"
       workspace_name:
         description: 'Terraform Cloud - Workspace'
         type: string
