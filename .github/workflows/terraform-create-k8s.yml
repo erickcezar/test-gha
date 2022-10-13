@@ -74,7 +74,7 @@ jobs:
 
       - name: Velero connect with another regions backups
         working-directory: terraform/${{ github.event.inputs.environment }}-${{ github.event.inputs.region }}
-        if: github.event.inputs.velero_restore
+        if: ${{ github.event.inputs.velero_restore }}
         run: |
           sed -i 's/VELERO_REGION/${{ github.event.inputs.velero_source_region }}/g' 12_velero.tf
 
