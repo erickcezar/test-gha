@@ -31,6 +31,7 @@ on:
         description: 'Velero connect restore backups'
         type: boolean
         required: false
+        default: false
       velero_source_region:
         required: false
         type: choice
@@ -66,9 +67,9 @@ jobs:
       - name: Replace vars in terraform config files
         working-directory: terraform/${{ github.event.inputs.environment }}-${{ github.event.inputs.region }}
         run: |
-          sed -i 's/REGION/${{ github.event.inputs.region }}/g' locals.tf
-          sed -i 's/ENVIRONMENT/${{ github.event.inputs.environment }}/g' locals.tf
-          sed -i 's/WORKSPACE_NAME/${{ github.event.inputs.workspace_name }}/g' backend.tf
+          sed -i 's%REGION%${{ github.event.inputs.region }}%g' locals.tf
+          sed -i 's%ENVIRONMENT%${{ github.event.inputs.environment }}%g' locals.tf
+          sed -i 's%WORKSPACE_NAME%${{ github.event.inputs.workspace_name }}%g' backend.tf
           sed -i 's%IP_RANGE%${{ github.event.inputs.ip_range }}%g' 1_networking.tf
 
       - name: Velero connect with another regions backups
