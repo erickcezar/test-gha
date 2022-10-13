@@ -59,5 +59,28 @@ jobs:
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
       - name: Create new terraform directory
+        working-directory: terraform
         run: |
-          ls -la
+          cp -r templates ${{ github.event.inputs.environment }}-${{ github.event.inputs.region }}
+
+      - name: Replace vars in terraform config files
+        working-directory: terraform/${{ github.event.inputs.environment }}-${{ github.event.inputs.region }}
+        run: |
+          sed -i 's/REGION/${{ github.event.inputs.region }}/g' locals.tf
+          sed -i 's/ENVIRONMENT/${{ github.event.inputs.environment }}/g' locals.tf
+          sed -i 's/WORKSPACE_NAME/${{ github.event.inputs.workspace_name }}/g' backend.tf
+          sed -i 's/IP_RANGE/${{ github.event.inputs.ip_range }}/g' 1_networking.tf
+
+      - name: Velero connect with another regions backups
+        working-directory: terraform/${{ github.event.inputs.environment }}-${{ github.event.inputs.region }}
+        if: github.event.inputs.velero_restore
+        run: |
+          sed -i 's/VELERO_REGION/${{ github.event.inputs.velero_source_region }}/g' 12_velero.tf
+
+      - name: Push new terraform folder and changes
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .
+          git commit -m "New Terraform folder - k8s ${{ github.event.inputs.environment }}-${{ github.event.inputs.region }}"
+          git push
