@@ -1,0 +1,67 @@
+image:
+  tag: "1.8.13"
+
+## https://docs.fluentbit.io/manual/administration/configuring-fluent-bit/configuration-file
+config:
+  ## https://docs.fluentbit.io/manual/pipeline/inputs
+  inputs: |
+    [INPUT]
+        Name tail
+        Path /var/log/containers/*.log
+        Multiline.parser cri
+        Tag kube.*
+        DB /var/log/flb_kube.db
+        Mem_Buf_Limit 50MB
+        Skip_Long_Lines On
+        Refresh_Interval 10
+    [INPUT]
+        Name systemd
+        Tag host.*
+        Systemd_Filter _SYSTEMD_UNIT=kubelet.service
+        Read_From_Tail On
+    [INPUT]
+        Name tail
+        Tag accesslogs.*
+        Path /var/log/containers/ingress-nginx-*.log
+        Multiline.parser cri
+  ## https://docs.fluentbit.io/manual/pipeline/filters
+  filters: |
+    [FILTER]
+        Name kubernetes
+        Match *
+        Kube_URL https://kubernetes.default.svc.cluster.local:443
+        Merge_Log On
+        Keep_Log On
+        K8S-Logging.Parser On
+        K8S-Logging.Exclude Off
+        Annotations Off
+        Labels On
+    [FILTER]
+        Name grep
+        Match accesslogs.*
+        Exclude stream stderr
+  ## https://docs.fluentbit.io/manual/pipeline/outputs
+  outputs: |
+    [OUTPUT]
+        Name kafka
+        Match *
+        Brokers kafka-kafka-bootstrap.kafka.svc.cluster.local
+        Topics pod-logs
+        rdkafka.enable.ssl.certificate.verification false
+        rdkafka.metadata.broker.list kafka-kafka-bootstrap.kafka.svc.cluster.local
+        Timestamp_Key time
+        rdkafka.log.connection.close false
+        rdkafka.queue.buffering.max.kbytes 10240
+        rdkafka.request.required.acks 1
+    [OUTPUT]
+        Name kafka
+        Match accesslogs.*
+        Brokers kafka-kafka-bootstrap.kafka.svc.cluster.local
+        Topics access-logs-v2
+        rdkafka.enable.ssl.certificate.verification false
+        rdkafka.metadata.broker.list kafka-kafka-bootstrap.kafka.svc.cluster.local
+        Timestamp_Key time
+  ## https://docs.fluentbit.io/manual/pipeline/parsers
+  customParsers: |
+
+  

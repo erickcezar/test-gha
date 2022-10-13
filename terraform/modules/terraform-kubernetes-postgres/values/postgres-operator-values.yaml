@@ -1,0 +1,5 @@
+configKubernetes:
+  # additional labels assigned to the cluster objects
+  cluster_labels:
+    application: spilo
+    sidecar.istio.io/inject: "false"

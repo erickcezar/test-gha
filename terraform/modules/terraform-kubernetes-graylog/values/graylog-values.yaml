@@ -1,0 +1,39 @@
+graylog:
+  rootEmail: cloud@marketcircle.com
+  ## A service for Graylog web interface
+  ##
+  service:
+    type: ClusterIP
+    port: 9000
+    ## Add additional ports for the service/statefulset to expose
+    ##
+    ports:
+      - name: gelf-udp
+        port: 12221
+        protocol: UDP
+      - name: gelf-tcp
+        port: 12222
+        protocol: TCP
+      - name: gelf-http
+        port: 12201
+        protocol: TCP
+      - name: fastly-tcp
+        port: 5999
+        protocol: TCP
+      - name: vault-tcp
+        port: 1234
+        protocol: TCP
+      - name: syslog
+        port: 5511
+        protocol: UDP
+
+  ## Additional input ports for receiving logs from servers
+  ## Note: Name must be in IANA_SVC_NAME (at most 15 characters, matching regex [a-z0-9]([a-z0-9-]*[a-z0-9])* and it must contains at least one letter [a-z], hyphens cannot be adjacent to other hyphens)
+  ## Note: Array must be sorted by port order
+
+  resources:
+    limits:
+      cpu: "2"
+    requests:
+      cpu: "500m"
+      memory: "1024Mi"

@@ -1,0 +1,86 @@
+name: Setup new k8s cluster
+on:
+  workflow_dispatch:
+    inputs:
+      region:
+        required: true
+        type: choice
+        description: 'Region to deploy k8s cluster'
+        options:
+        - nyc1
+        - nyc3
+        - tor1
+        - lon1
+        - ams3
+        - fra1
+        - sgp1
+      environment:
+        description: 'Environment name'
+        type: string
+        required: true
+      ip_range:
+        description: 'VPC Network Range'
+        type: string
+        required: true
+      workspace_name:
+        description: 'Terraform Cloud - Workspace'
+        type: string
+        required: true
+      velero_restore:
+        description: 'Velero connect restore backups'
+        type: boolean
+        required: false
+      velero_source_region:
+        required: false
+        type: choice
+        description: 'Velero source region backups'
+        options:
+        - nyc1
+        - nyc3
+        - tor1
+        - lon1
+        - ams3
+        - fra1
+        - sgp1
+
+jobs:
+  terraform:
+    name: "Terraform Setup"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: master
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.0.11
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+
+      - name: Create new terraform directory
+        working-directory: terraform
+        run: cp -r templates ${{ github.event.inputs.environment }}-${{ github.event.inputs.region }}
+
+      - name: Replace vars in terraform config files
+        working-directory: terraform/${{ github.event.inputs.environment }}-${{ github.event.inputs.region }}
+        run: |
+          sed -i 's/REGION/${{ github.event.inputs.region }}/g' locals.tf
+          sed -i 's/ENVIRONMENT/${{ github.event.inputs.environment }}/g' locals.tf
+          sed -i 's/WORKSPACE_NAME/${{ github.event.inputs.workspace_name }}/g' backend.tf
+          sed -i 's/IP_RANGE/${{ github.event.inputs.ip_range }}/g' 1_networking.tf
+
+      - name: Velero connect with another regions backups
+        working-directory: terraform/${{ github.event.inputs.environment }}-${{ github.event.inputs.region }}
+        if: github.event.inputs.velero_restore
+        run: |
+          sed -i 's/VELERO_REGION/${{ github.event.inputs.velero_source_region }}/g' 12_velero.tf
+
+      - name: Push new terraform folder and changes
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .
+          git commit -m "New Terraform folder - k8s ${{ github.event.inputs.environment }}-${{ github.event.inputs.region }}"
+          git push
