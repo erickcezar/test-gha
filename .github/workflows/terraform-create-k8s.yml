@@ -62,7 +62,9 @@ jobs:
 
       - name: Create new terraform directory
         working-directory: terraform
-        run: cp -r templates ${{ github.event.inputs.environment }}-${{ github.event.inputs.region }}
+        run: |
+          ls -la
+          cp -r templates ${{ github.event.inputs.environment }}-${{ github.event.inputs.region }}
 
       - name: Replace vars in terraform config files
         working-directory: terraform/${{ github.event.inputs.environment }}-${{ github.event.inputs.region }}
