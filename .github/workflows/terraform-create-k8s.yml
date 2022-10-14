@@ -73,12 +73,32 @@ jobs:
           sed -i 's%"IP_RANGE"%"${{ github.event.inputs.ip_range }}"%g' 1_networking.tf
           sed -i 's%"VELEROREGION"%"${{ github.event.inputs.velero_region }}"%g' locals.tf
 
+      - name: Terraform Init
+        id: init
+        run: terraform init
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+
+      - name: Terraform - Create VPC
+        run: terraform apply -target digitalocean_vpc.development -auto-approve -input=false
+
+      - name: Terraform - Create DOKS (k8s Cluster)
+        run: terraform apply -target module.doks -auto-approve -input=false
+
+      - name: Terraform - Module Monitoring
+        run: terraform apply -target module.monitoring -auto-approve -input=false
+
       - name: Velero connect with another regions backups
         working-directory: terraform/${{ github.event.inputs.environment }}-${{ github.event.inputs.region }}
         if: ${{ github.event.inputs.velero_restore == 'true' }}
         run: |
-            echo "terraform import module.velero.digitalocean_spaces_bucket.bucket nyc3,marketcircle-${{ github.event.inputs.velero_region }}-{{ github.event.inputs.environment }}-velero-backups"
-            echo "terraform import module.velero.module.s3-bucket.aws_s3_bucket.this[0] marketcircle-${{ github.event.inputs.velero_region }}-{{ github.event.inputs.environment }}-velero-backups"
+            terraform import module.velero.digitalocean_spaces_bucket.bucket nyc3,marketcircle-${{ github.event.inputs.velero_region }}-{{ github.event.inputs.environment }}-velero-backups
+            terraform import module.velero.module.s3-bucket.aws_s3_bucket.this[0] marketcircle-${{ github.event.inputs.velero_region }}-{{ github.event.inputs.environment }}-velero-backups
+
+      - name: Terraform - All Modules
+        run: terraform apply -auto-approve -input=false
 
       - name: Push new terraform folder and changes
         run: |
