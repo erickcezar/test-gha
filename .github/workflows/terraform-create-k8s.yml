@@ -71,7 +71,7 @@ jobs:
           sed -i 's%ENVIRONMENT%${{ github.event.inputs.environment }}%g' locals.tf
           sed -i 's%WORKSPACE_NAME%${{ github.event.inputs.workspace_name }}%g' backend.tf
           sed -i 's%IP_RANGE%${{ github.event.inputs.ip_range }}%g' 1_networking.tf
-          sed -i 's%VELERO_REGION%${{ github.event.inputs.velero_region }}%g' 12_velero.tf
+          sed -i 's%VELEROREGION%${{ github.event.inputs.velero_region }}%g' 12_velero.tf
 
       - name: Velero connect with another regions backups
         working-directory: terraform/${{ github.event.inputs.environment }}-${{ github.event.inputs.region }}

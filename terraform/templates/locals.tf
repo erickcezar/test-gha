@@ -2,5 +2,5 @@
 locals {
   region        = "REGION"
   environment   = "ENVIRONMENT"
-  velero_region = "VELERO_REGION"
+  velero_region = "VELEROREGION"
 }
