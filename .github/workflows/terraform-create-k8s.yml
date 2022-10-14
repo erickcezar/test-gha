@@ -77,6 +77,7 @@ jobs:
         working-directory: terraform/${{ github.event.inputs.environment }}-${{ github.event.inputs.region }}
         if: ${{ github.event.inputs.velero_restore }}
         run: |
+            echo ${{ github.event.inputs.velero_restore }}
             echo "terraform import module.velero.digitalocean_spaces_bucket.bucket nyc3,marketcircle-${{ github.event.inputs.velero_region }}-{{ github.event.inputs.environment }}-velero-backups"
             echo "terraform import module.velero.module.s3-bucket.aws_s3_bucket.this[0] marketcircle-${{ github.event.inputs.velero_region }}-{{ github.event.inputs.environment }}-velero-backups"
 
