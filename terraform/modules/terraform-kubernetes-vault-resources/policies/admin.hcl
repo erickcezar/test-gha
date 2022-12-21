@@ -1,3 +1,0 @@
-path "*" {
-  policy = "sudo"
-}
